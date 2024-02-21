@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { AuthService } from '../../shared/data-access/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { LoginFormComponent } from './ui/login-form.component';
@@ -31,5 +31,13 @@ import { LoginService } from './data-access/login.service';
 export default class LoginComponent {
   public loginService = inject(LoginService);
   public authService = inject(AuthService);
-  // private router = inject(Router);
+  private router = inject(Router);
+
+  constructor() {
+    effect(() => {
+      if (this.authService.user()) {
+        this.router.navigate(['home']);
+      }
+    });
+  }
 }
