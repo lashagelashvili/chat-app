@@ -9,6 +9,8 @@ import {
   of,
   exhaustMap,
   ignoreElements,
+  retry,
+  filter,
 } from 'rxjs';
 import { collection, query, orderBy, limit, addDoc } from 'firebase/firestore';
 import { collectionData } from 'rxfire/firestore';
@@ -16,6 +18,7 @@ import { connect } from 'ngxtension/connect';
 import { Message } from '../interfaces/message';
 import { FIRESTORE } from '../../app.config';
 import { AuthService } from './auth.service';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 interface MessageState {
   messages: Message[];
@@ -29,8 +32,14 @@ export class MessageService {
   private firestore = inject(FIRESTORE);
   private authService = inject(AuthService);
 
+  private authUser$ = toObservable(this.authService.user);
+
   // sources
-  messages$ = this.getMessages();
+  messages$ = this.getMessages().pipe(
+    retry({
+      delay: () => this.authUser$.pipe(filter((user) => !!user)),
+    })
+  );
   add$ = new Subject<Message['content']>();
 
   // state
